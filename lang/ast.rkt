@@ -92,8 +92,10 @@
 (define-syntax-rule (define-op/combine id @op)
   (define-expr-op id get-first #:same-arity? #t #:lift @op))
 
-(define-op/combine + @+)
-(define-op/combine - @-)
+;(define-op/combine + @+)
+;(define-op/combine - @-)
+(define-op/combine + #f)
+(define-op/combine - #f)
 (define-op/combine & #f)
 
 (define-syntax-rule (define-op/cross id)
