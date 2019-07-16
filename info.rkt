@@ -1,6 +1,6 @@
 #lang info
 
-(define collection "forgedocelot")
+(define collection "forged-ocelot")
 
 (define pkg-desc "A solver for relational logic")
 (define version "0.0.1")
