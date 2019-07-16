@@ -12,4 +12,4 @@
                "rosette"))
 (define build-deps '("scribble-lib" "racket-doc"))
 
-(define scribblings '(("scribblings/ocelot.scrbl" () (experimental))))
+(define scribblings '(("scribblings/forged-ocelot.scrbl" () (experimental))))
