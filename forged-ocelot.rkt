@@ -20,7 +20,6 @@
  (struct-out prefab)
  relation-name
  relation-arity
- relation
  ; lang/bounds.rkt
  make-bound make-exact-bound make-upper-bound make-product-bound
  (struct-out bounds)
