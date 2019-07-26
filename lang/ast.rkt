@@ -116,17 +116,17 @@
 (define-syntax-rule (define-op/closure id @op)
   (define-expr-op id (const 2) #:min-length 1 #:max-length 1 #:arity 2 #:lift @op))
 (define-op/closure ^ #f)
-(define-op/closure * @*)
+(define-op/closure * #f)
 
 ;; -- comprehensions -----------------------------------------------------------
 
 (struct node/expr/comprehension node/expr (decls formula)
   #:methods gen:custom-write
   [(define (write-proc self port mode)
-    (fprintf port "(comprehension ~a ~a ~a)" 
-                  (node/expr-arity self) 
-                  (node/expr/comprehension-decls self)
-                  (node/expr/comprehension-formula self)))])
+     (fprintf port "(comprehension ~a ~a ~a)" 
+              (node/expr-arity self) 
+              (node/expr/comprehension-decls self)
+              (node/expr/comprehension-formula self)))])
 (define (comprehension decls formula)
   (for ([e (map cdr decls)])
     (unless (node/expr? e)
@@ -163,6 +163,8 @@
   (node/expr-arity rel))
 (define (relation-name rel)
   (node/expr/relation-name rel))
+
+(struct node/int () #:transparent)
 
 ;; -- constants ----------------------------------------------------------------
 
@@ -201,6 +203,33 @@
      (syntax/loc stx
        (define-formula-op id type? checks ... #:lift #f))]))
 
+(define-syntax (define-int-op stx)
+  (syntax-case stx ()
+    [(_ id type? checks ... #:lift @op)
+     (with-syntax ([name (format-id #'id "node/int/op/~a" #'id)])
+       (syntax/loc stx
+         (begin
+           (struct name node/expr/op () #:transparent #:reflection-name 'id)
+           (define id
+             (lambda e
+               (if ($and @op (for/and ([a (in-list e)]) ($not (node/expr? a))))
+                   (apply @op e)
+                   (begin
+                     (check-args 'id e type? checks ...)
+                     (let ([arities (for/list ([a (in-list e)]) (node/expr-arity a))])
+                       (name (apply arity arities) e)))))))))]
+    [(_ id arity checks ...)
+     (syntax/loc stx
+       (define-expr-op id type? checks ... #:lift #f))]))
+
+(define-int-op int+ node/int?)
+(define-int-op int- node/int?)
+(define-int-op int* node/int?)
+(define-int-op int/ node/int?)
+
+(define-int-op card node/expr?)
+(define-int-op sum node/expr?)
+
 (define-formula-op in node/expr? #:same-arity? #t #:max-length 2)
 (define-formula-op = node/expr? #:same-arity? #t #:max-length 2 #:lift @=)
 
@@ -208,6 +237,9 @@
 (define-formula-op || node/formula? #:min-length 1 #:lift @||)
 (define-formula-op => node/formula? #:min-length 2 #:max-length 2 #:lift @=>)
 (define-formula-op ! node/formula? #:min-length 1 #:max-length 1 #:lift @!)
+(define-formula-op > node/int? #:min-length 2 #:max-length 2)
+(define-formula-op < node/int? #:min-length 2 #:max-length 2)
+(define-formula-op int= node/int? #:min-length 2 #:max-length 2)
 (define not !)
 
 (define-syntax (@@and stx)
