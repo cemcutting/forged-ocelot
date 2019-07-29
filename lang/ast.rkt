@@ -173,6 +173,41 @@
 (define iden (node/expr/constant 2 'iden))
 
 
+;; INTS ------------------------------------------------------------------------
+
+(struct node/int () #:transparent)
+
+;; -- operators ----------------------------------------------------------------
+
+(struct node/int/op node/int (children) #:transparent)
+
+(define-syntax (define-int-op stx)
+  (syntax-case stx ()
+    [(_ id type? checks ... #:lift @op)
+     (with-syntax ([name (format-id #'id "node/int/op/~a" #'id)])
+       (syntax/loc stx
+         (begin
+           (struct name node/int/op () #:transparent #:reflection-name 'id)
+           (define id
+             (lambda e
+               (if ($and @op (for/and ([a (in-list e)]) ($not (type? a))))
+                   (apply @op e)
+                   (begin
+                     (check-args 'id e type? checks ...)
+                     (name e))))))))]
+    [(_ id type? checks ...)
+     (syntax/loc stx
+       (define-int-op id type? checks ... #:lift #f))]))
+
+(define-int-op int+ node/int? #:min-length 2)
+(define-int-op int- node/int? #:min-length 2)
+(define-int-op int* node/int? #:min-length 2)
+(define-int-op int/ node/int? #:min-length 2)
+
+(define-int-op card node/expr? #:min-length 1 #:max-length 1)
+(define-int-op sum node/expr? #:min-length 1 #:max-length 1)
+
+
 ;; FORMULAS --------------------------------------------------------------------
 
 (struct node/formula () #:transparent)
@@ -206,6 +241,9 @@
 (define-formula-op || node/formula? #:min-length 1 #:lift @||)
 (define-formula-op => node/formula? #:min-length 2 #:max-length 2 #:lift @=>)
 (define-formula-op ! node/formula? #:min-length 1 #:max-length 1 #:lift @!)
+(define-formula-op int> node/int? #:min-length 2 #:max-length 2)
+(define-formula-op int< node/int? #:min-length 2 #:max-length 2)
+(define-formula-op int= node/int? #:min-length 2 #:max-length 2)
 (define not !)
 
 (define-syntax (@@and stx)
